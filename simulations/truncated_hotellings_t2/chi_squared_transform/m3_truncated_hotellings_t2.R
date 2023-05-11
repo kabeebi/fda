@@ -1,0 +1,150 @@
+##################### independent errors
+
+sigma <- c(0.05, 0.1, 0.15, 0.2, 0.4, 0.8) * 0.45
+t_val_star <- matrix(nrow = 1000, ncol = 6)
+t <- seq(from = 0, to = 1, length.out = 25)
+
+
+for (z in 1:6) {
+  for (n in 1:1000) {
+    x <- rbind(
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + rnorm(25, mean = 0, sd = sigma[z])
+    )
+
+    y <- rbind(
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + rnorm(25, mean = 0, sd = sigma[z]),
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + rnorm(25, mean = 0, sd = sigma[z])
+    )
+
+    nx <- nrow(x)
+    ny <- nrow(y)
+    delta <- colMeans(x) - colMeans(y)
+    p <- ncol(x)
+    Sx <- cov(x)
+    Sy <- cov(y)
+    S_pooled <- ((nx - 1) * Sx + (ny - 1) * Sy) / (nx + ny - 2)
+
+    L <- eigen(S_pooled)$values
+    V <- eigen(S_pooled)$vectors
+    A <- matrix(rep(0), nrow = 25, ncol = 25)
+
+    val <- c()
+    for (i in 1:25) {
+      val[i] <- L[i] / L[1]
+    }
+
+    k <- tail(which(val > 10^-13), 1)
+
+    t_val <- c()
+    for (i in 1:k) {
+      L_prime <- as.numeric(solve(L[i]))
+      A1 <- L_prime * V[, i] %*% t(V[, i])
+      A <- A + A1
+      t_squared <- (nx * ny) / (nx + ny) * t(delta) %*% A %*% (delta)
+      statistic <- (t_squared - i) * 1 / (sqrt(2 * i))
+      t_val[i] <- statistic
+    }
+    t_val_star[n, z] <- max(t_val)
+  }
+}
+
+
+sums <- c()
+for (i in 1:6) {
+  sums[i] <- sum(t_val_star[, i] > 17.5) / 1000
+}
+print(sums)
+
+
+
+###################### Brownian Error
+
+
+p_val <- matrix(nrow = 1000, ncol = 6)
+sigma <- c(0.05, 0.1, 0.15, 0.2, 0.4, 0.8)
+t <- seq(from = 0, to = 1, length.out = 25)
+
+for (z in 1:6) {
+  for (n in 1:1000) {
+    x <- rbind(
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(1 / 5) * (1 - t)^(6 - (1 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z]
+    )
+
+    y <- rbind(
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z],
+      t^(2 / 5) * (1 - t)^(6 - (2 / 5)) + BM(x = 0, t0 = 0, T = 1, N = 24) * sigma[z]
+    )
+
+    nx <- nrow(x)
+    ny <- nrow(y)
+    delta <- colMeans(x) - colMeans(y)
+    p <- ncol(x)
+    Sx <- cov(x)
+    Sy <- cov(y)
+    S_pooled <- ((nx - 1) * Sx + (ny - 1) * Sy) / (nx + ny - 2)
+
+    L <- eigen(S_pooled)$values
+    V <- eigen(S_pooled)$vectors
+    A <- matrix(rep(0), nrow = 25, ncol = 25)
+
+    val <- c()
+    for (i in 1:25) {
+      val[i] <- L[i] / L[1]
+    }
+
+    k <- tail(which(val > 10^-13), 1)
+
+    t_val <- c()
+    for (i in 1:k) {
+      L_prime <- as.numeric(solve(L[i]))
+      A1 <- L_prime * V[, i] %*% t(V[, i])
+      A <- A + A1
+      t_squared <- (nx * ny) / (nx + ny) * t(delta) %*% A %*% (delta)
+      statistic <- (t_squared - i) * 1 / (sqrt(2 * i))
+      t_val[i] <- statistic
+    }
+
+    p_val[n, z] <- max(t_val)
+  }
+}
+
+
+sums <- c()
+for (i in 1:6) {
+  sums[i] <- sum(p_val[, i] > 17.5) / 1000
+}
+print(sums)
