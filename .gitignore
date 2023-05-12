@@ -7,4 +7,8 @@
 *.Rhistory
 *.DS_Store
 *.vscode
-.RData
+*.RData
+*.Rproj.*
+*.csv
+*.xlsx
+*.Rproj
